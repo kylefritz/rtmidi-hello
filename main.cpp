@@ -36,9 +36,32 @@ const unsigned char OTHER = 176; // can be 1) encoder or 2) control key - check 
 // keyboard
 // left: 48   right: 72
 
+std::vector<int> speeds;
+
+void playSound(int number){
+    int speed = speeds[number];
+
+    std::string cmd = "afplay /Users/kylefritz/Desktop/rtmidi-hello/" + std::to_string(number) + ".wav -r " + std::to_string(speed);
+
+    std::cout << cmd << std::endl;
+
+    system(cmd.c_str());
+}
+
+void debug_message(unsigned char controlId, unsigned char mesageType, unsigned char messageInfo){
+    std::cout << "controlId=" << (int)controlId << std::endl;
+    std::cout << "type=" << (int)mesageType << std::endl;
+    std::cout << "value=" << (int)messageInfo << std::endl;
+}
 
 int main()
 {
+    speeds.push_back(1); //dummy
+    speeds.push_back(1);
+    speeds.push_back(1);
+    speeds.push_back(1);
+    speeds.push_back(1);
+
     RtMidiIn *midiin = new RtMidiIn();
     midiin->openPort(0);
     midiin->ignoreTypes(false, false , false);
@@ -62,10 +85,35 @@ int main()
         auto controlId = message[1];
         auto messageInfo = message[2];
 
-        std::cout << "controlId=" << (int)controlId << std::endl;
-        std::cout << "type=" << (int)mesageType << std::endl;
-        std::cout << "value=" << (int)messageInfo << std::endl;
+//        debug_message(mesageType, controlId, messageInfo);
 
-        std::cout << std::endl;
+        if(mesageType == PAD_DOWN){
+            if(controlId == 40){
+                playSound(1);
+            }
+            if(controlId == 41){
+                playSound(2);
+            }
+            if(controlId == 42){
+                playSound(3);
+            }
+            if(controlId == 43){
+                playSound(4);
+            }
+        }
+        if(mesageType == OTHER){
+            if(controlId == 21){
+                speeds[1] = messageInfo/10;
+            }
+            if(controlId == 22){
+                speeds[2] = messageInfo/10;
+            }
+            if(controlId == 23){
+                speeds[3] = messageInfo/10;
+            }
+            if(controlId == 24){
+                speeds[4] = messageInfo/10;
+            }
+        }
     }
 }
