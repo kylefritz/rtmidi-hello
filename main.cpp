@@ -9,42 +9,64 @@
 
 #include "RtMidi.h"
 
-
-bool done;
-static void finish(int ignore){ done = true; }
 int main()
 {
     RtMidiIn *midiin = new RtMidiIn();
-    std::vector<unsigned char> message;
-    int nBytes, i;
-    double stamp;
-    // Check available ports.
-    unsigned int nPorts = midiin->getPortCount();
-    if ( nPorts == 0 ) {
-        std::cout << "No ports available!\n";
-        goto cleanup;
-    }
-    midiin->openPort( 0 );
-    // Don't ignore sysex, timing, or active sensing messages.
-    midiin->ignoreTypes( false, false, false );
-    // Install an interrupt handler function.
-    done = false;
-    (void) signal(SIGINT, finish);
-    // Periodically check input queue.
-    std::cout << "Reading MIDI from port ... quit with Ctrl-C.\n";
-    while ( !done ) {
-        stamp = midiin->getMessage( &message );
-        nBytes = message.size();
-        for ( i=0; i<nBytes; i++ )
-            std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
-        if ( nBytes > 0 )
-            std::cout << "stamp = " << stamp << std::endl;
+    midiin->openPort(0);
+    midiin->ignoreTypes(false, false , false);
 
-        // Sleep for 10 milliseconds ...
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::cout << "Reading from midi port, CTRL+C to quit." << std::endl;
+
+    std::vector<unsigned char> message;
+    while(true){
+        // read message
+        midiin->getMessage(&message);
+        if(message.size() == 0) {
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            continue;
+        }
+        if(message.size() != 3){
+            std::cout << "weird message. size=" << message.size() << std::endl;
+            for(auto const& val: message){
+                std::cout << "byte=" << val << std::endl;
+            }
+            continue;
+        }
+
+        auto mesageType = message[0];
+        auto controlId = message[1];
+        auto messageInfo = message[2];
+
+        // type=144; key down
+        // type=128; key up
+
+        // type=153; pad down
+        // type=137; pad up
+
+        // type=153; pad down
+        // type=137; pad up
+
+        // type=176; rotary encoder; dial control pad (value=127 down; 0 up)
+        // type=176; control pad (value=127 down; 0 up)
+
+        //encoders
+        // left: 21   right: 28
+
+        //pads
+        //
+        //      1       2       3       4       5       6       7       8
+        //    (40)     (41)    (42)    (43)    (48)    (49)    (50)    (51)
+        //
+        //      9       10      11      12      13      14      15      16
+        //    (36)     (37)    (38)    (39)    (44)    (45)    (46)    (47)
+
+        // keyboard
+        // left: 48   right: 72
+
+        std::cout << "controlId=" << (int)controlId << std::endl;
+        std::cout << "type=" << (int)mesageType << std::endl;
+        std::cout << "value=" << (int)messageInfo << std::endl;
+
+        std::cout << std::endl;
     }
-    // Clean up
-    cleanup:
-    delete midiin;
-    return 0;
 }
