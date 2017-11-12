@@ -9,6 +9,13 @@
 
 #include "RtMidi.h"
 
+void handleWrongByteCount(std::vector<unsigned char>& message){
+    std::cout << "weird message. size=" << message.size() << std::endl;
+    for(auto const& val: message){
+        std::cout << "byte=" << val << std::endl;
+    }
+}
+
 int main()
 {
     RtMidiIn *midiin = new RtMidiIn();
@@ -26,10 +33,7 @@ int main()
             continue;
         }
         if(message.size() != 3){
-            std::cout << "weird message. size=" << message.size() << std::endl;
-            for(auto const& val: message){
-                std::cout << "byte=" << val << std::endl;
-            }
+            handleWrongByteCount(message);
             continue;
         }
 
